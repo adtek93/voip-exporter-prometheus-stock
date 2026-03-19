@@ -1,0 +1,784 @@
+{
+  "id": null,
+  "uid": "asterisk-voice-gw-01",
+  "title": "Asterisk Voice Gateway",
+  "description": "Asterisk PJSIP monitoring dashboard with trunk status, RTT, AOR and registration info",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "tags": ["asterisk", "voip", "pjsip"],
+  "__inputs": [
+    {
+      "name": "DS_PROM",
+      "label": "Prometheus Datasource",
+      "description": "Chọn Prometheus datasource của bạn",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROM",
+        "label": "Datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "options": [],
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+        "query": "label_values(asterisk_core_uptime, host)",
+        "refresh": 2,
+        "multi": false,
+        "includeAll": false,
+        "hide": 0,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "row",
+      "title": "📊 Overview",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 }
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Asterisk Uptime",
+      "description": "Thời gian hoạt động của Asterisk",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_core_uptime{host=~\"$host\"}",
+          "legendFormat": "Uptime",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 3600 },
+              { "color": "green", "value": 86400 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 3 }
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Calls Processed",
+      "description": "Tổng số cuộc gọi đã xử lý",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_calls_processed{host=~\"$host\"}",
+          "legendFormat": "Calls",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        }
+      },
+      "options": {
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 3 }
+    },
+
+    {
+      "id": 4,
+      "type": "gauge",
+      "title": "Current Active Calls",
+      "description": "Số cuộc gọi đang hoạt động hiện tại",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_active_calls{host=~\"$host\"}",
+          "legendFormat": "Active Calls",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 3 }
+    },
+
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "AORs — Total / Online / Offline",
+      "description": "Tổng AOR, Online, Offline",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_aors{host=~\"$host\"}",
+          "legendFormat": "Total",
+          "refId": "A"
+        },
+        {
+          "expr": "asterisk_pjsip_online{host=~\"$host\"}",
+          "legendFormat": "Online",
+          "refId": "B"
+        },
+        {
+          "expr": "asterisk_pjsip_offline{host=~\"$host\"}",
+          "legendFormat": "Offline",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Online" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Offline" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 12, "y": 1, "w": 6, "h": 3 }
+    },
+
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Active Calls Chart",
+      "description": "Biểu đồ số cuộc gọi đang hoạt động theo thời gian",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_active_calls{host=~\"$host\"}",
+          "legendFormat": "Active Calls",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "showPoints": "auto"
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      },
+      "gridPos": { "x": 18, "y": 1, "w": 6, "h": 3 }
+    },
+
+    {
+      "id": 10,
+      "type": "row",
+      "title": "🌐 Trunk Status",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 1 }
+    },
+
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Trunks — Total / Online / Offline",
+      "description": "Tổng trunk, Online, Offline",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_trunks_total{host=~\"$host\"}",
+          "legendFormat": "Total",
+          "refId": "A"
+        },
+        {
+          "expr": "asterisk_pjsip_trunks_online{host=~\"$host\"}",
+          "legendFormat": "Online",
+          "refId": "B"
+        },
+        {
+          "expr": "asterisk_pjsip_trunks_offline{host=~\"$host\"}",
+          "legendFormat": "Offline",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Online" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Offline" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 0, "y": 5, "w": 6, "h": 4 }
+    },
+
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Trunk Availability",
+      "description": "Trạng thái từng trunk (Avail / Unavail)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_trunk_status{host=~\"$host\", trunk!~\"^<Aor.*\"}",
+          "legendFormat": "{{trunk}}",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "❌ Unavail", "color": "red" },
+                "1": { "text": "✅ Avail",   "color": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "trunk" },
+            "properties": [{ "id": "displayName", "value": "Trunk Name" }, { "id": "custom.width", "value": 200 }] },
+          { "matcher": { "id": "byName", "options": "ip" },
+            "properties": [{ "id": "displayName", "value": "IP Address" }, { "id": "custom.width", "value": 160 }] },
+          { "matcher": { "id": "byName", "options": "Value" },
+            "properties": [{ "id": "displayName", "value": "Status" }, { "id": "custom.displayMode", "value": "color-background" }, { "id": "custom.width", "value": 140 }] },
+          { "matcher": { "id": "byName", "options": "Time" },   "properties": [{ "id": "custom.hidden", "value": true }] },
+          { "matcher": { "id": "byName", "options": "host" },   "properties": [{ "id": "custom.hidden", "value": true }] },
+          { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Trunk Name" }],
+        "cellHeight": "md"
+      },
+      "gridPos": { "x": 6, "y": 5, "w": 9, "h": 4 }
+    },
+
+    {
+      "id": 13,
+      "type": "gauge",
+      "title": "Worst Trunk RTT",
+      "description": "RTT cao nhất trong các trunk hiện tại",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "max(asterisk_pjsip_trunk_rtt_seconds{host=~\"$host\", trunk!~\"^<Aor.*\"})",
+          "legendFormat": "Max RTT",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "max": 60,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "orange", "value": 15 },
+              { "color": "red",    "value": 30 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 15, "y": 5, "w": 4, "h": 4 }
+    },
+
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Trunk Online / Offline Over Time",
+      "description": "Biểu đồ số trunk online/offline theo thời gian",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_trunks_online{host=~\"$host\"}",
+          "legendFormat": "Online",
+          "refId": "A"
+        },
+        {
+          "expr": "asterisk_pjsip_trunks_offline{host=~\"$host\"}",
+          "legendFormat": "Offline",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "auto"
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Online" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "Offline" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "gridPos": { "x": 19, "y": 5, "w": 5, "h": 4 }
+    },
+
+    {
+      "id": 20,
+      "type": "row",
+      "title": "📡 Trunk RTT (Round-Trip Time)",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 9, "w": 24, "h": 1 }
+    },
+
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Trunk RTT Over Time",
+      "description": "Round-trip time của từng trunk theo thời gian",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_trunk_rtt_seconds{host=~\"$host\", trunk!~\"^<Aor.*\"}",
+          "legendFormat": "{{trunk}} ({{ip}})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "always",
+            "pointSize": 5
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red",    "value": 30 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "min", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi" }
+      },
+      "gridPos": { "x": 0, "y": 10, "w": 14, "h": 6 }
+    },
+
+    {
+      "id": 22,
+      "type": "table",
+      "title": "Trunk RTT — Current Snapshot",
+      "description": "RTT hiện tại của từng trunk",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_trunk_rtt_seconds{host=~\"$host\", trunk!~\"^<Aor.*\"}",
+          "legendFormat": "{{trunk}}",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "orange", "value": 15 },
+              { "color": "red",    "value": 30 }
+            ]
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "trunk" },
+            "properties": [{ "id": "displayName", "value": "Trunk" }, { "id": "custom.width", "value": 200 }] },
+          { "matcher": { "id": "byName", "options": "ip" },
+            "properties": [{ "id": "displayName", "value": "IP" }, { "id": "custom.width", "value": 150 }] },
+          { "matcher": { "id": "byName", "options": "Value" },
+            "properties": [{ "id": "displayName", "value": "RTT (s)" }, { "id": "custom.displayMode", "value": "color-background" }, { "id": "custom.width", "value": 130 }] },
+          { "matcher": { "id": "byName", "options": "Time" },     "properties": [{ "id": "custom.hidden", "value": true }] },
+          { "matcher": { "id": "byName", "options": "host" },     "properties": [{ "id": "custom.hidden", "value": true }] },
+          { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "RTT (s)", "desc": true }],
+        "cellHeight": "md"
+      },
+      "gridPos": { "x": 14, "y": 10, "w": 10, "h": 6 }
+    },
+
+    {
+      "id": 30,
+      "type": "row",
+      "title": "📋 AOR & Endpoint Status",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 1 }
+    },
+
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "AOR Online / Offline Over Time",
+      "description": "Biểu đồ AOR online và offline theo thời gian",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_online{host=~\"$host\"}",
+          "legendFormat": "Online",
+          "refId": "A"
+        },
+        {
+          "expr": "asterisk_pjsip_offline{host=~\"$host\"}",
+          "legendFormat": "Offline",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "auto"
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Online" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "Offline" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "gridPos": { "x": 0, "y": 17, "w": 12, "h": 6 }
+    },
+
+    {
+      "id": 32,
+      "type": "gauge",
+      "title": "AOR Online %",
+      "description": "Phần trăm AOR đang online",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_online{host=~\"$host\"} / asterisk_pjsip_aors{host=~\"$host\"} * 100",
+          "legendFormat": "Online %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "orange", "value": 30 },
+              { "color": "yellow", "value": 50 },
+              { "color": "green",  "value": 70 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 12, "y": 17, "w": 4, "h": 6 }
+    },
+
+    {
+      "id": 33,
+      "type": "gauge",
+      "title": "Trunk Online %",
+      "description": "Phần trăm Trunk đang online",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_trunks_online{host=~\"$host\"} / asterisk_pjsip_trunks_total{host=~\"$host\"} * 100",
+          "legendFormat": "Trunk Online %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",    "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "yellow", "value": 75 },
+              { "color": "green",  "value": 100 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 16, "y": 17, "w": 4, "h": 6 }
+    },
+
+    {
+      "id": 34,
+      "type": "stat",
+      "title": "Calls/min Rate",
+      "description": "Tốc độ xử lý cuộc gọi trong 5 phút gần nhất",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "rate(asterisk_calls_processed{host=~\"$host\"}[5m]) * 60",
+          "legendFormat": "Calls/min",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        }
+      },
+      "options": {
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "gridPos": { "x": 20, "y": 17, "w": 4, "h": 6 }
+    },
+
+    {
+      "id": 40,
+      "type": "row",
+      "title": "📱 PJSIP Registration Details",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 23, "w": 24, "h": 1 }
+    },
+
+    {
+      "id": 41,
+      "type": "table",
+      "title": "Registered Endpoints",
+      "description": "Danh sách endpoint đã đăng ký — User Agent, IP WAN, IP Local, Status",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "targets": [
+        {
+          "expr": "asterisk_pjsip_registration_info{host=~\"$host\"}",
+          "legendFormat": "{{endpoint}}",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "❌ Unregistered", "color": "red" },
+                "1": { "text": "✅ Registered",   "color": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "endpoint" },
+            "properties": [{ "id": "displayName", "value": "Endpoint" }, { "id": "custom.width", "value": 120 }] },
+          { "matcher": { "id": "byName", "options": "user_agent" },
+            "properties": [{ "id": "displayName", "value": "User Agent" }, { "id": "custom.width", "value": 280 }] },
+          { "matcher": { "id": "byName", "options": "ip_wan" },
+            "properties": [{ "id": "displayName", "value": "IP WAN" }, { "id": "custom.width", "value": 160 }] },
+          { "matcher": { "id": "byName", "options": "ip_local" },
+            "properties": [{ "id": "displayName", "value": "IP Local" }, { "id": "custom.width", "value": 160 }] },
+          { "matcher": { "id": "byName", "options": "Value" },
+            "properties": [{ "id": "displayName", "value": "Status" }, { "id": "custom.displayMode", "value": "color-background" }, { "id": "custom.width", "value": 160 }] },
+          { "matcher": { "id": "byName", "options": "Time" },
+            "properties": [{ "id": "displayName", "value": "Last Seen" }, { "id": "custom.width", "value": 190 }] },
+          { "matcher": { "id": "byName", "options": "host" },     "properties": [{ "id": "custom.hidden", "value": true }] },
+          { "matcher": { "id": "byName", "options": "__name__" }, "properties": [{ "id": "custom.hidden", "value": true }] }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Endpoint" }],
+        "cellHeight": "md",
+        "footer": { "show": false }
+      },
+      "gridPos": { "x": 0, "y": 24, "w": 24, "h": 8 }
+    }
+
+  ]
+}
